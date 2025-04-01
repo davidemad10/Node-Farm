@@ -32,6 +32,7 @@ fs.readFile("./txt/start.txt", "utf-8", (err1, data1) => {
 ////////////////////////////////////////////////////
 //server
 const http = require("http");
+const { console } = require("inspector");
 // const server = http.createServer((req, res) => {
 //   res.end("Hello From the server!");
 // });
@@ -42,17 +43,52 @@ const http = require("http");
 //////////////////////////////////////////////
 //Routing
 const url = require("url");
+const tempOverView = fs.readFileSync(
+  `${__dirname}/templates/overview.html`,
+  "utf-8"
+);
+const tempProductCard = fs.readFileSync(
+  `${__dirname}/templates/product-card.html`,
+  "utf-8"
+);
+const tempProduct = fs.readFileSync(
+  `${__dirname}/templates/product.html`,
+  "utf-8"
+);
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, "utf-8");
 const dataObj = JSON.parse(data);
 
+const replacetemp = (temp, product) => {
+  let output = temp.replace(/{%IMAGE%}/g, product.image);
+  output = temp.replace(/{%PRODUCT_NAME%}/g, product.productName);
+  output = output.replace(/{%FROM%}/g, product.from);
+  output = output.replace(/{%PRICE%}/g, product.price);
+  output = output.replace(/{%DESCRIPTION%}/g, product.description);
+  output = output.replace(/{%ID%}/g, product.id);
+  output = output.replace(/{%QUANTITY%}/g, product.quantity);
+  if (!product.organic)
+    output = output.replace(/{%NOT_ORGANIC%}/g, "not-organic");
+  return output;
+};
+
 const server = http.createServer((req, res) => {
   const pathName = req.url;
+  //overview
   if (pathName === "/") {
-    res.end("welcome to home page");
+    res.writeHead(200, { "content-type": "text/html" });
+    const card = dataObj.map((el) => replacetemp(tempProductCard, el));
+    const output = tempOverView.replace(/{%PRODUCT_CARDS%}/g, card);
+    res.end(output);
+
+    //products
   } else if (pathName === "/product") {
-    res.end("welcome to product page");
+    res.writeHead(200, { "content-type": "text/html" });
+    res.end(tempProduct);
+
+    //pay
   } else if (pathName === "/pay") {
     res.end("welcome to pay page");
+    //api
   } else if (pathName === "/api") {
     res.writeHead(200, { "content-type": "application/json" });
     res.end(data);
