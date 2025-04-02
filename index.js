@@ -60,36 +60,37 @@ const dataObj = JSON.parse(data);
 
 const replacetemp = (temp, product) => {
   let output = temp.replace(/{%IMAGE%}/g, product.image);
-  output = temp.replace(/{%PRODUCT_NAME%}/g, product.productName);
+  output = output.replace(/{%PRODUCT_NAME%}/g, product.productName);
   output = output.replace(/{%FROM%}/g, product.from);
   output = output.replace(/{%PRICE%}/g, product.price);
   output = output.replace(/{%DESCRIPTION%}/g, product.description);
   output = output.replace(/{%ID%}/g, product.id);
   output = output.replace(/{%QUANTITY%}/g, product.quantity);
+  output = output.replace(/{%NUTRIENTS%}/g, product.nutrients);
   if (!product.organic)
     output = output.replace(/{%NOT_ORGANIC%}/g, "not-organic");
   return output;
 };
 
 const server = http.createServer((req, res) => {
-  const pathName = req.url;
+  // const pathName = req.url;
+  const { query, pathname } = url.parse(req.url, true);
   //overview
-  if (pathName === "/") {
+  if (pathname === "/") {
     res.writeHead(200, { "content-type": "text/html" });
     const card = dataObj.map((el) => replacetemp(tempProductCard, el));
     const output = tempOverView.replace(/{%PRODUCT_CARDS%}/g, card);
     res.end(output);
 
     //products
-  } else if (pathName === "/product") {
+  } else if (pathname === "/product") {
     res.writeHead(200, { "content-type": "text/html" });
-    res.end(tempProduct);
+    const product = dataObj[query.id];
+    const output = replacetemp(tempProduct, product);
+    res.end(output);
 
-    //pay
-  } else if (pathName === "/pay") {
-    res.end("welcome to pay page");
     //api
-  } else if (pathName === "/api") {
+  } else if (pathname === "/api") {
     res.writeHead(200, { "content-type": "application/json" });
     res.end(data);
   } else {
@@ -100,7 +101,7 @@ const server = http.createServer((req, res) => {
   }
 });
 
-server.listen(3000, "127.0.0.1", () => {
-  console.log("server is listening on port 3000");
+server.listen(8001, "127.0.0.1", () => {
+  console.log("server is listening on port 8001");
 });
 ///////////////////////////////////////////////
